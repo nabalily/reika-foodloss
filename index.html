@@ -305,20 +305,25 @@
       <input type="date" class="date-input" id="dateInput">
     </div>
 
-    <div class="field-row">
-      <span class="field-label">生肉</span>
-      <input type="number" class="qty-input" id="rawInput"
-             placeholder="0" min="0" step="0.1"
-             oninput="updatePreview()">
-      <span class="qty-unit">kg</span>
-    </div>
-
-    <div class="field-row">
-      <span class="field-label">ジャーキー</span>
-      <input type="number" class="qty-input" id="jerkyInput"
-             placeholder="0" min="0" step="0.1"
-             oninput="updatePreview()">
-      <span class="qty-unit">kg</span>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+      <div>
+        <div style="font-size:13px; color:#666; margin-bottom:6px; font-weight:500;">生肉</div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <input type="number" class="qty-input" id="rawInput"
+                 placeholder="0" min="0" step="0.1"
+                 oninput="updatePreview()" style="font-size:22px;">
+          <span class="qty-unit">kg</span>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:13px; color:#666; margin-bottom:6px; font-weight:500;">ジャーキー</div>
+        <div style="display:flex; align-items:center; gap:4px;">
+          <input type="number" class="qty-input" id="jerkyInput"
+                 placeholder="0" min="0" step="0.1"
+                 oninput="updatePreview()" style="font-size:22px;">
+          <span class="qty-unit">kg</span>
+        </div>
+      </div>
     </div>
 
     <div class="partner-row">
