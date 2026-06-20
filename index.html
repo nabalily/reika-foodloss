@@ -94,6 +94,20 @@
     .qty-input:focus { border-color: #3b5e3c; }
     .qty-unit { font-size: 16px; color: #666; font-weight: 600; flex-shrink: 0; }
 
+    .date-input {
+      flex: 1;
+      min-width: 0;
+      padding: 13px 10px;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      font-size: 15px;
+      color: #2d2d2d;
+      outline: none;
+      -webkit-appearance: none;
+      width: 100%;
+    }
+    .date-input:focus { border-color: #3b5e3c; }
+
     /* 取引先セレクト */
     .partner-row {
       display: flex;
@@ -284,6 +298,11 @@
     </div>
 
     <div class="field-row">
+      <span class="field-label">日付</span>
+      <input type="date" class="date-input" id="dateInput">
+    </div>
+
+    <div class="field-row">
       <span class="field-label">販売重量</span>
       <input type="number" class="qty-input" id="qtyInput"
              placeholder="0" min="0.1" step="0.1"
@@ -377,7 +396,10 @@
 
       try {
         const now = new Date();
-        const dateStr = now.toLocaleDateString('ja-JP');
+        const selectedDate = document.getElementById('dateInput').value;
+        const dateStr = selectedDate
+          ? new Date(selectedDate + 'T00:00:00').toLocaleDateString('ja-JP')
+          : now.toLocaleDateString('ja-JP');
         const timeStr = now.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
 
         const params = new URLSearchParams({
@@ -494,6 +516,13 @@
       t.classList.add('show');
       setTimeout(() => t.classList.remove('show'), 2800);
     }
+
+    // 日付欄に今日の日付をセット
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const dd = String(today.getDate()).padStart(2, '0');
+    document.getElementById('dateInput').value = `${yyyy}-${mm}-${dd}`;
 
     loadData();
   </script>
