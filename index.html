@@ -71,25 +71,28 @@
     .field-row {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       margin-bottom: 14px;
+      width: 100%;
     }
-    .field-label { font-size: 14px; color: #666; white-space: nowrap; min-width: 56px; }
+    .field-label { font-size: 14px; color: #666; white-space: nowrap; min-width: 56px; flex-shrink: 0; }
 
     .qty-input {
       flex: 1;
-      padding: 14px 12px;
+      min-width: 0;
+      padding: 14px 10px;
       border: 2px solid #e8e8e8;
       border-radius: 12px;
-      font-size: 28px;
+      font-size: 24px;
       font-weight: 700;
       text-align: right;
       color: #2d2d2d;
       outline: none;
       -webkit-appearance: none;
+      width: 100%;
     }
     .qty-input:focus { border-color: #3b5e3c; }
-    .qty-unit { font-size: 18px; color: #666; font-weight: 600; }
+    .qty-unit { font-size: 16px; color: #666; font-weight: 600; flex-shrink: 0; }
 
     /* 取引先セレクト */
     .partner-row {
