@@ -146,6 +146,41 @@
       font-weight: 700;
       line-height: 1;
     }
+    .manage-partner-btn {
+      padding: 13px 12px;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      background: white;
+      font-size: 13px;
+      color: #888;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    /* 取引先管理モーダル */
+    .partner-manage-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 0;
+      border-bottom: 1px solid #f0f0f0;
+    }
+    .partner-manage-item:last-child { border-bottom: none; }
+    .partner-name { font-size: 15px; color: #2d2d2d; }
+    .delete-btn {
+      padding: 7px 14px;
+      border: none;
+      border-radius: 8px;
+      background: #fff0f0;
+      color: #d9534f;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      flex-shrink: 0;
+    }
 
     .preview {
       background: #eef3ee;
@@ -316,6 +351,7 @@
         <option value="">選択してください</option>
       </select>
       <button class="add-partner-btn" onclick="openModal()" title="新規取引先を追加">＋</button>
+      <button class="manage-partner-btn" onclick="openManageModal()" title="取引先を管理">管理</button>
     </div>
 
     <div class="preview empty" id="preview">商品・重量・取引先を入力してください</div>
@@ -331,6 +367,15 @@
     <ul class="history-list" id="historyList">
       <li class="msg-loading">読み込み中...</li>
     </ul>
+  </div>
+
+  <!-- 取引先管理モーダル -->
+  <div class="modal-overlay" id="manageModalOverlay">
+    <div class="modal">
+      <h3>取引先を管理</h3>
+      <ul class="history-list" id="managePartnerList" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></ul>
+      <button class="modal-cancel" style="width:100%" onclick="closeManageModal()">閉じる</button>
+    </div>
   </div>
 
   <!-- 新規取引先モーダル -->
@@ -442,6 +487,7 @@
           `今日: ${d.today.toFixed(1)}kg削減`;
 
         // 取引先リストを更新
+        currentPartners = d.partners || [];
         const sel = document.getElementById('partnerSelect');
         const current = sel.value;
         sel.innerHTML = '<option value="">選択してください</option>';
@@ -476,6 +522,41 @@
         document.getElementById('todayText').textContent = 'データ取得できませんでした';
         document.getElementById('historyList').innerHTML =
           '<li class="msg-empty">読み込みに失敗しました</li>';
+      }
+    }
+
+    // 取引先管理モーダル
+    let currentPartners = [];
+
+    function openManageModal() {
+      const list = document.getElementById('managePartnerList');
+      if (currentPartners.length === 0) {
+        list.innerHTML = '<li class="msg-empty">取引先がありません</li>';
+      } else {
+        list.innerHTML = currentPartners.map(p => `
+          <li class="partner-manage-item">
+            <span class="partner-name">${p}</span>
+            <button class="delete-btn" onclick="deletePartner('${p.replace(/'/g, "\\'")}')">削除</button>
+          </li>
+        `).join('');
+      }
+      document.getElementById('manageModalOverlay').classList.add('open');
+    }
+
+    function closeManageModal() {
+      document.getElementById('manageModalOverlay').classList.remove('open');
+    }
+
+    async function deletePartner(name) {
+      if (!confirm(`「${name}」を削除しますか？`)) return;
+      try {
+        const params = new URLSearchParams({ action: 'deletePartner', partner: name });
+        await fetch(`${SCRIPT_URL}?${params}`, { mode: 'no-cors' });
+        showToast(`「${name}」を削除しました`);
+        closeManageModal();
+        setTimeout(loadData, 1200);
+      } catch (e) {
+        showToast('エラーが発生しました');
       }
     }
 
