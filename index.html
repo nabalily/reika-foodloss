@@ -281,6 +281,19 @@
 
     .msg-loading { color: #bbb; font-size: 13px; text-align: center; padding: 16px; }
     .msg-empty { color: #ccc; font-size: 13px; text-align: center; padding: 16px; }
+
+    .type-btn {
+      padding: 14px 8px;
+      border: 2px solid #e8e8e8;
+      border-radius: 12px;
+      background: white;
+      font-size: 15px;
+      font-weight: 700;
+      color: #bbb;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .type-btn.on { border-color: #3b5e3c; background: #eef3ee; color: #3b5e3c; }
   </style>
 </head>
 <body>
@@ -356,6 +369,42 @@
       <h3>取引先を管理</h3>
       <ul class="history-list" id="managePartnerList" style="margin-bottom:16px; max-height:300px; overflow-y:auto;"></ul>
       <button class="modal-cancel" style="width:100%" onclick="closeManageModal()">閉じる</button>
+    </div>
+  </div>
+
+  <!-- 記録編集モーダル -->
+  <div class="modal-overlay" id="editModalOverlay">
+    <div class="modal">
+      <h3>記録を修正する</h3>
+      <input type="hidden" id="editRowIndex">
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px; color:#999; margin-bottom:6px;">日付</div>
+        <input type="date" id="editDate" style="width:100%; padding:12px; border:2px solid #e8e8e8; border-radius:12px; font-size:15px; outline:none;">
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px; color:#999; margin-bottom:6px;">商品</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+          <button class="type-btn" id="editBtnRaw" onclick="selectEditType('生肉')">生肉</button>
+          <button class="type-btn" id="editBtnJerky" onclick="selectEditType('ジャーキー')">ジャーキー</button>
+        </div>
+      </div>
+      <div style="margin-bottom:12px;">
+        <div style="font-size:12px; color:#999; margin-bottom:6px;">販売重量</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <input type="number" id="editQty" min="0.1" step="0.1" style="flex:1; padding:12px; border:2px solid #e8e8e8; border-radius:12px; font-size:20px; font-weight:700; text-align:right; outline:none;">
+          <span style="font-size:16px; color:#666; font-weight:600;">kg</span>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:12px; color:#999; margin-bottom:6px;">取引先</div>
+        <select id="editPartner" style="width:100%; padding:12px; border:2px solid #e8e8e8; border-radius:12px; font-size:15px; outline:none; background:white;">
+          <option value="">選択してください</option>
+        </select>
+      </div>
+      <div class="modal-btns">
+        <button class="modal-cancel" onclick="closeEditModal()">キャンセル</button>
+        <button class="modal-ok" onclick="saveEdit()">保存する</button>
+      </div>
     </div>
   </div>
 
@@ -479,7 +528,7 @@
           return;
         }
         list.innerHTML = d.records.map(r => `
-          <li class="history-item">
+          <li class="history-item" onclick='openEditModal(${JSON.stringify(r)})' style="cursor:pointer;">
             <div>
               <div class="h-date">${r.date} ${r.time}</div>
               <div class="h-type">${r.type}</div>
@@ -489,12 +538,70 @@
               <div class="h-qty">${r.qty}kg 販売</div>
               <div class="h-reduction">▼${r.reduction}kg削減</div>
             </div>
+            <div style="color:#ccc; font-size:18px; margin-left:8px;">›</div>
           </li>
         `).join('');
       } catch (e) {
         document.getElementById('todayText').textContent = 'データ取得できませんでした';
         document.getElementById('historyList').innerHTML =
           '<li class="msg-empty">読み込みに失敗しました</li>';
+      }
+    }
+
+    // 記録編集モーダル
+    function openEditModal(r) {
+      document.getElementById('editRowIndex').value = r.rowIndex;
+      document.getElementById('editDate').value = r.dateRaw || '';
+      document.getElementById('editQty').value = r.qty;
+
+      selectEditType(r.type);
+
+      const sel = document.getElementById('editPartner');
+      sel.innerHTML = '<option value="">選択してください</option>';
+      currentPartners.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p; opt.textContent = p;
+        sel.appendChild(opt);
+      });
+      sel.value = r.partner || '';
+
+      document.getElementById('editModalOverlay').classList.add('open');
+    }
+
+    function selectEditType(type) {
+      document.getElementById('editBtnRaw').classList.toggle('on', type === '生肉');
+      document.getElementById('editBtnJerky').classList.toggle('on', type === 'ジャーキー');
+    }
+
+    function closeEditModal() {
+      document.getElementById('editModalOverlay').classList.remove('open');
+    }
+
+    async function saveEdit() {
+      const rowIndex = document.getElementById('editRowIndex').value;
+      const dateVal = document.getElementById('editDate').value;
+      const qty = parseFloat(document.getElementById('editQty').value);
+      const partner = document.getElementById('editPartner').value;
+      const type = document.getElementById('editBtnRaw').classList.contains('on') ? '生肉' : 'ジャーキー';
+
+      if (!qty || qty <= 0) { showToast('重量を入力してください'); return; }
+
+      const dateStr = dateVal
+        ? new Date(dateVal + 'T00:00:00').toLocaleDateString('ja-JP')
+        : '';
+
+      try {
+        const params = new URLSearchParams({
+          action: 'update', rowIndex, type, qty,
+          reduction: type === 'ジャーキー' ? qty * 4 : qty,
+          partner, date: dateStr
+        });
+        await fetch(`${SCRIPT_URL}?${params}`, { mode: 'no-cors' });
+        showToast('✓ 修正しました');
+        closeEditModal();
+        setTimeout(loadData, 1500);
+      } catch (e) {
+        showToast('エラーが発生しました');
       }
     }
 
